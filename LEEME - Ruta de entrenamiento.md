@@ -8,7 +8,7 @@ La carpeta `ruta-entrenamiento` debe permanecer junto al HTML y a los materiales
 
 - Ruta con énfasis en matrices, recursividad y Fibonacci, seguida de integración y continuidad de la materia.
 - 148 ejercicios: los 17 de la guía anterior, 127 consignas de los nueve notebooks y cuatro refuerzos adicionales identificados como tales.
-- 24 fuentes: PDFs, notebooks, documento de pilas y colas y modelos Python. Los PDFs y el documento tienen transcripción de texto integrada; las figuras se consultan en el original.
+- 24 fuentes: PDFs, notebooks, documento de pilas y colas y modelos Python. En “Teoría y materiales”, el visor muestra las páginas originales de los 12 PDF, incluidas figuras y fórmulas. Elegí el apunte desde el selector o desde los enlaces de cada concepto. También hay una transcripción de texto integrada.
 - 34 soluciones de referencia; 17 incluyen pruebas automáticas de entrenamiento. Las demás consignas permiten escribir y ejecutar tus propias pruebas.
 - Cronograma completo, plan semanal sugerido y simulacro de 90 minutos con pistas y soluciones ocultas.
 - Editor por ejercicio con resaltado, números de línea, sangría, consola, entrada para `input()` y descarga `.py`.
@@ -30,7 +30,9 @@ El código, las notas, las entradas y el estado de cada ejercicio se guardan en 
 
 La interfaz y el contenido funcionan sin conexión. La primera ejecución carga Python y sus paquetes con Pyodide desde internet; la disponibilidad posterior depende de la conexión y la caché del navegador. Si no carga, descargá el `.py` y ejecutalo con tu Python habitual. **Detener** cancela la tarea sin perder el código. El motor se recarga después de detenerlo. Hay un límite de 12 segundos de ejecución, y la consola limita la salida a 100 KB. Los gráficos de Matplotlib no se muestran en esta consola.
 
-Los ejercicios de diccionarios permiten incorporar el TDA provisto por el TP6. Los del TP5bis permiten incorporar tus implementaciones guardadas de Pila y Cola de los ejercicios 1 y 11 del TP5. Los fragmentos originales de los notebooks se muestran como material de cátedra y pueden contener borradores; no se presentan automáticamente como soluciones correctas.
+Los ejercicios de diccionarios permiten incorporar el TDA provisto por el TP6. Los del TP5bis permiten incorporar tus implementaciones guardadas de Pila y Cola de los ejercicios 1 y 11 del TP5. El editor empieza con el código y los comentarios originales del ejercicio cuando existen; si su celda estaba vacía, usa una plantilla. Tus borradores guardados se conservan: “Agregar código original” incorpora los ejemplos encima de tu trabajo. “Restablecer código inicial” recupera ese punto de partida. En “Ejemplos originales del práctico” podés consultar todas las celdas de código del notebook, incluidos los ejemplos introductorios. Los fragmentos se conservan tal como aparecen en el material de cátedra y pueden contener borradores.
+
+El visor de PDF funciona con los archivos locales, sin descargas adicionales ni conexión. Si tu navegador no muestra PDF integrados, desplegá “Leer transcripción de texto” o usá “Abrir original”.
 
 Las pruebas incluidas evalúan resultados y casos límite. No califican el examen ni verifican automáticamente todas las restricciones, por ejemplo el uso obligatorio de recursividad o de una interfaz TDA.
 

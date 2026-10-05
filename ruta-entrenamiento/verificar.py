@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 def main():
-    source = (ROOT / 'ruta-entrenamiento/datos.js').read_text()
+    source = (ROOT / 'ruta-entrenamiento/datos.js').read_text(encoding='utf-8')
     data = json.loads(source.removeprefix('window.TRAINING_DATA = ').strip().removesuffix(';'))
     exercises = data['exercises']
     ids = {exercise['id'] for exercise in exercises}
@@ -36,7 +36,14 @@ def main():
         expected_ids = {Path(filename).stem + '-' + num for num in numbers}
         actual_ids = {exercise['id'] for exercise in exercises if exercise['source'] == filename}
         assert actual_ids == expected_ids, f'Consignas faltantes o sobrantes en {filename}'
-        notebook = json.loads((ROOT / filename).read_text())
+        notebook = json.loads((ROOT / filename).read_text(encoding='utf-8'))
+        book = next(book for book in data['books'] if book['file'] == filename)
+        original_examples = [
+            {'cell': index + 1, 'code': ''.join(cell['source'])}
+            for index, cell in enumerate(notebook['cells'])
+            if cell['cell_type'] == 'code' and ''.join(cell['source']).strip()
+        ]
+        assert book['examples'] == original_examples, f'Ejemplos originales alterados o ausentes: {filename}'
         for exercise in exercises:
             if exercise['source'] != filename:
                 continue
@@ -58,15 +65,16 @@ def main():
         exec(compile(exercise['tests'], 'casos_' + exercise['id'], 'exec'), namespace)
         tested += 1
         assertions += sum(isinstance(node, ast.Assert) for node in ast.walk(ast.parse(exercise['tests'])))
-    html = (ROOT / 'Guia primer parcial estructura de datos.html').read_text()
+    html = (ROOT / 'Guia primer parcial estructura de datos.html').read_text(encoding='utf-8')
     html_ids = re.findall(r'id="([^"]+)"', html)
     assert len(html_ids) == len(set(html_ids)), 'Identificadores HTML duplicados'
     for asset in re.findall(r'(?:src|href)="(ruta-entrenamiento/[^"]+)"', html):
         assert (ROOT / asset).is_file(), asset
-    app = (ROOT / 'ruta-entrenamiento/app.js').read_text()
+    app = (ROOT / 'ruta-entrenamiento/app.js').read_text(encoding='utf-8')
     for element_id in re.findall(r"\$\('([^']+)'\)", app):
         assert element_id in html_ids, f'Elemento ausente: {element_id}'
     print(f'OK: {len(exercises)} ejercicios; {numbered} consignas de notebooks; {len(material_files)} materiales.')
+    print(f'OK: {sum(len(book["examples"]) for book in data["books"])} celdas de ejemplos idénticas a los notebooks originales.')
     print(f'OK: {tested} soluciones con pruebas; {assertions} aserciones; fuentes, plantillas y referencias HTML válidas.')
     print('La ejecución del motor en el navegador requiere una comprobación independiente con internet.')
 

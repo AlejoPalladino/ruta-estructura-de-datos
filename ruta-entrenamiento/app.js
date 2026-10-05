@@ -33,6 +33,7 @@ function saveState() {
 }
 const entryFor = id => state.exercises[id] || (state.exercises[id] = {status:'pending'});
 const getStatus = id => state.exercises[id]?.status || 'pending';
+const initialCode = ex => ex.notebookCode || ex.starter;
 const findId = (prefix, num) => DATA.exercises.find(e => e.id.startsWith(prefix) && e.id.endsWith('-'+num))?.id;
 const fibId = findId('TP_4_Recursividad',3), puertoId = findId('Practica_Parcial',2), intervaloId = findId('Practica_Parcial',1);
 let selectedId = state.selected || findId('TP_2_Arreglos',12), currentView = 'ruta', running = false;
@@ -101,7 +102,12 @@ function selectExercise(id) {
  if(ex.source){const a=document.createElement('a');a.href=encodeURI(ex.source);a.textContent='Abrir fuente ↗';a.target='_blank';a.rel='noopener';$('exercise-source').appendChild(a);}
  $('exercise-statement').innerHTML=ex.markdown?markdown(ex.statement):ex.statement;
  if(id===fibId)$('exercise-statement').insertAdjacentHTML('beforeend','<div class="notice">Convención usada en esta ruta: F(0)=0 y F(1)=1. “Los primeros N números” usa los índices 0 a N−1. Entrená primero la función y después la impresión de la serie.</div>');
- $('exercise-status').value=entry.status;$('code-editor').value=entry.code??ex.starter;
+ $('exercise-status').value=entry.status;$('code-editor').value=entry.code??initialCode(ex);
+ const book=DATA.books.find(b=>b.file===ex.source);
+ $('notebook-examples').hidden=!book?.examples.length;
+ $('notebook-examples').open=false;
+ $('notebook-examples-content').innerHTML=book?book.examples.map(c=>'<details><summary>Celda '+c.cell+'</summary><pre><code>'+esc(c.code)+'</code></pre></details>').join(''):'';
+ $('add-notebook-code').hidden=!ex.notebookCode;
  $('exercise-notes').value=entry.notes||'';$('stdin-input').value=entry.stdin||'';
  $('editor-filename').textContent=(ex.id.startsWith('legacy-')?'modelo_'+ex.legacyId:ex.id.replace(/[^\w-]/g,'_'))+'.py';
  $('help-panel').hidden=true;$('help-panel').replaceChildren();
@@ -123,6 +129,13 @@ function showHelp(kind) {
  panel.hidden=false;
 }
 $('hint-button').addEventListener('click',()=>showHelp('hint'));$('solution-button').addEventListener('click',()=>showHelp('solution'));$('notebook-button').addEventListener('click',()=>showHelp('notebook'));
+$('add-notebook-code').addEventListener('click',()=>{
+ const original=DATA.exercises.find(e=>e.id===selectedId).notebookCode;
+ if(!original)return;
+ if($('code-editor').value.includes(original)){toast('El código original ya está en el editor.');return;}
+ $('code-editor').value=original+'\n\n# --- Mi trabajo ---\n'+$('code-editor').value;
+ updateEditor();saveDraft();toast('Ejemplos originales agregados. Tu código se conserva debajo.');
+});
 function highlight(code) {
  const re=/(#[^\n]*|'''[\s\S]*?'''|"""[\s\S]*?"""|'(?:\\.|[^'\\\n])*'|"(?:\\.|[^"\\\n])*"|\b(?:def|class|if|elif|else|return|for|while|in|and|or|not|is|None|True|False|import|from|as|raise|try|except|finally|with|pass|break|continue|lambda|yield)\b|\b\d+(?:\.\d+)?\b)/g;
  let result='',last=0;for(const m of code.matchAll(re)){result+=esc(code.slice(last,m.index));const t=m[0],cls=t[0]==='#'?'comment':/^["']/.test(t)?'str':/^\d/.test(t)?'number':'kw';result+='<span class="'+cls+'">'+esc(t)+'</span>';last=m.index+t.length;}return result+esc(code.slice(last))+'\n';
@@ -151,7 +164,7 @@ function download(filename,text,type){const url=URL.createObjectURL(new Blob([te
 $('download-code').addEventListener('click',()=>download($('editor-filename').textContent,$('code-editor').value,'text/x-python;charset=utf-8'));
 $('export-progress').addEventListener('click',()=>{saveDraft();download('mi-ruta-'+new Date().toISOString().slice(0,10)+'.json',JSON.stringify(state,null,2),'application/json');toast('Respaldo descargado: código, notas y estados.');});
 $('import-progress').addEventListener('change',async event=>{const file=event.target.files[0];if(!file)return;try{if(file.size>10_000_000)throw Error('El archivo excede 10 MB');const imported=validState(JSON.parse(await file.text()));state={...state,log:imported.log,exercises:{...state.exercises,...imported.exercises}};saveState();$('learning-log').value=state.log;selectExercise(imported.selected||selectedId);renderRoute();toast('Respaldo importado. Se conservaron los ejercicios no incluidos.');}catch(error){toast('No se importó: '+error.message);}finally{event.target.value='';}});
-$('reset-code').addEventListener('click',()=>$('reset-dialog').showModal());$('cancel-reset').addEventListener('click',()=>$('reset-dialog').close());$('confirm-reset').addEventListener('click',()=>{if(running)stopRun('Ejecución detenida.');$('code-editor').value=DATA.exercises.find(e=>e.id===selectedId).starter;updateEditor();saveDraft();$('reset-dialog').close();});
+$('reset-code').addEventListener('click',()=>$('reset-dialog').showModal());$('cancel-reset').addEventListener('click',()=>$('reset-dialog').close());$('confirm-reset').addEventListener('click',()=>{if(running)stopRun('Ejecución detenida.');$('code-editor').value=initialCode(DATA.exercises.find(e=>e.id===selectedId));updateEditor();saveDraft();$('reset-dialog').close();});
 // The module worker is created from a Blob so opening the HTML via file:// works.
 function pythonWorkerMain() {
  let pyPromise;
@@ -245,9 +258,35 @@ const newTheory=[
  ['Conjuntos y matriz dispersa','set() crea un conjunto vacío; {} crea un dict nativo vacío. Un conjunto elimina duplicados y permite unión, intersección y diferencia. Para una matriz dispersa guardá solo las celdas no nulas usando (fila,columna) como clave; la ausencia representa 0. No confundas este ejemplo de dict nativo con el TDA del TP.','a, b = {1,2,3}, {2,4}\nprint(a | b)  # unión\nprint(a & b)  # intersección\nprint(a - b)  # diferencia\npixels = {(0,1): 120}\nprint(pixels.get((1,1), 0))','Diccionario.pdf','TP_6_Diccionario_Conjunto.ipynb'],
  ['Práctica de parcial: integrar las reglas','Intervalo creciente exige recursividad: contá una racha de elementos, no de comparaciones. En Puerto, barcos >500 van en las primeras N//2 dársenas y los demás en las restantes. Al transferir, agregá en el destino y eliminá del origen. Probá la región llena aun cuando la otra mitad tenga huecos.','# N = 4\n# grandes: filas 0 y 1\n# pequeños (incluido 500): filas 2 y 3\n# None significa un lugar libre.','Practica_Parcial_1.ipynb','Practica_Parcial_1.ipynb']
 ];
-$('new-theory').innerHTML=newTheory.map(([title,body,code,source,practice])=>`<article class="panel prose"><span class="eyebrow accent">CONCEPTO + APLICACIÓN</span><h2>${title}</h2><p>${body}</p><pre><code>${esc(code)}</code></pre><small>Fuentes: <a href="${encodeURI(source)}" target="_blank" rel="noopener">${esc(source)}</a> · <a href="${encodeURI(practice)}" target="_blank" rel="noopener">${esc(practice)}</a></small></article>`).join('');
+const pdfMaterials=DATA.materials.filter(m=>m.type==='PDF');
+$('pdf-select').innerHTML=pdfMaterials.map(m=>`<option value="${esc(m.file)}">${esc(m.file)}</option>`).join('');
+let selectedPdf='';
+function selectPdf(file) {
+ const material=pdfMaterials.find(m=>m.file===file);if(!material)return;
+ $('pdf-select').value=file;$('pdf-title').textContent=file;
+ const url=encodeURI(file);
+ $('pdf-open').href=url;$('pdf-download').href=url;
+ if(selectedPdf!==file){
+  selectedPdf=file;
+  $('pdf-frame').title='Contenido de '+file;
+  $('pdf-frame').src=url+'#view=FitH';
+  $('pdf-text').textContent=material.text||'No hay transcripción para este documento. Abrí el PDF original.';
+  $('pdf-transcription').open=false;
+ }
+}
+function openPdf(file) {
+ selectPdf(file);switchView('teoria');
+ $('pdf-reader').scrollIntoView({block:'start'});$('pdf-select').focus({preventScroll:true});
+}
+$('pdf-select').addEventListener('change',event=>selectPdf(event.target.value));
+if(pdfMaterials.length)selectPdf(pdfMaterials[0].file);
+document.addEventListener('click',event=>{
+ const link=event.target.closest('[data-pdf]');
+ if(link&&!event.ctrlKey&&!event.metaKey&&!event.shiftKey&&!event.altKey){event.preventDefault();openPdf(link.dataset.pdf);}
+});
+$('new-theory').innerHTML=newTheory.map(([title,body,code,source,practice])=>`<article class="panel prose"><span class="eyebrow accent">CONCEPTO + APLICACIÓN</span><h2>${title}</h2><p>${body}</p><pre><code>${esc(code)}</code></pre><small>Fuentes: <a href="${encodeURI(source)}" ${source.endsWith('.pdf')?`data-pdf="${esc(source)}"`:'target="_blank" rel="noopener"'}>${esc(source)}</a> · <a href="${encodeURI(practice)}" target="_blank" rel="noopener">${esc(practice)}</a></small></article>`).join('');
 $('original-theory').innerHTML=DATA.theory.map(t=>`<details><summary>${esc(t.title)}</summary><div class="prose">${t.html}</div></details>`).join('');
-$('materials').innerHTML=DATA.materials.map((m,i)=>`<details data-material="${i}"><summary><span class="chip">${m.type}</span>${esc(m.file)}</summary><div class="material-actions"><a href="${encodeURI(m.file)}" target="_blank" rel="noopener">Abrir original ↗</a><a href="${encodeURI(m.file)}" download>↓ Descargar</a>${m.type==='IPYNB'?`<button class="text-button" data-book-practice="${esc(m.file)}">Practicar sus ejercicios →</button>`:''}</div><div class="material-content"></div></details>`).join('');
+$('materials').innerHTML=DATA.materials.map((m,i)=>`<details data-material="${i}"><summary><span class="chip">${m.type}</span>${esc(m.file)}</summary><div class="material-actions">${m.type==='PDF'?`<a href="${encodeURI(m.file)}" data-pdf="${esc(m.file)}">Leer en el visor ↑</a>`:''}<a href="${encodeURI(m.file)}" target="_blank" rel="noopener">Abrir original ↗</a><a href="${encodeURI(m.file)}" download>↓ Descargar</a>${m.type==='IPYNB'?`<button class="text-button" data-book-practice="${esc(m.file)}">Practicar sus ejercicios →</button>`:''}</div><div class="material-content"></div></details>`).join('');
 for(const details of $('materials').querySelectorAll('details'))details.addEventListener('toggle',()=>{if(!details.open||details.dataset.loaded)return;details.dataset.loaded='true';const m=DATA.materials[+details.dataset.material],target=details.querySelector('.material-content');if(m.text){const pre=document.createElement('pre');pre.textContent=m.text;target.appendChild(pre);}else{const book=DATA.books.find(b=>b.file===m.file);if(book){target.innerHTML='<h3>Contexto del práctico</h3><div class="prose">'+markdown(book.notes)+'</div><h3>Ejemplos y código del notebook</h3><p class="muted">Incluye borradores de trabajo. No todos los fragmentos son soluciones completas.</p>'+book.examples.map(c=>'<details><summary>Celda '+c.cell+'</summary><pre>'+esc(c.code)+'</pre></details>').join('');}}});
 $('materials').addEventListener('click',event=>{const b=event.target.closest('[data-book-practice]');if(b){const ex=DATA.exercises.find(e=>e.source===b.dataset.bookPractice);if(ex)openExercise(ex.id);}});
 const weeklyPlan=[['05–11 oct','Índices, recorridos y diagonales','Tres sesiones de matrices + dos de diccionarios. Repetí los errores a las 48 h.'],['12–18 oct','Caso base, reducción y retorno','Factorial, suma y palíndromo. Continuidad: TDA con pilas y colas (clase del 16/10).'],['19–25 oct','Fibonacci y sus dos ramas','Término, primeros N y acumuladores. Continuidad: listas (19 y 23/10).'],['26 oct–01 nov','Recursividad aplicada','Intervalo creciente + suma recursiva de matriz. Continuidad: listas recursivas (26 y 30/10).'],['02–08 nov','TDA Puerto y simulacros','Ubicación por regiones y transferencia. Dos intentos sin ayuda. Continuidad: árboles.'],['09–15 nov','Cerrar los puntos débiles','Repaso de segundo parcial y un simulacro de recuperatorio. Repetí lo que aún necesita pistas.'],['16–20 nov','Segundo parcial y recuperación','Segundo parcial el lunes 16. Martes y miércoles: dos prácticas cortas de recuperación; jueves: trazas y bordes. Viernes 20: recuperatorio.']];
@@ -257,7 +296,7 @@ const schedule=[
 $('schedule-body').innerHTML=schedule.map(([week,date,topic,kind])=>`<tr class="${kind||''}"><td>${week}</td><td>${date}/2026</td><td>${topic}</td></tr>`).join('');
 const todayParts=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Argentina/Buenos_Aires',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const part=key=>todayParts.find(x=>x.type===key).value;const days=Math.round((Date.UTC(2026,10,20)-Date.UTC(+part('year'),+part('month')-1,+part('day')))/86400000);$('countdown').textContent=days>0?days+' días para entrenar · calendario oficial':days===0?'Hoy es el recuperatorio':'Fecha del cronograma 2026';
 let mockDeadline=0;
-function updateHelpVisibility(){const mock=mockDeadline>Date.now();for(const id of ['hint-button','solution-button'])$(id).hidden=mock;const ex=DATA.exercises.find(e=>e.id===selectedId);$('notebook-button').hidden=mock||!ex.notebookCode;$('mock-control').hidden=!mock;}
+function updateHelpVisibility(){const mock=mockDeadline>Date.now();for(const id of ['hint-button','solution-button'])$(id).hidden=mock;const ex=DATA.exercises.find(e=>e.id===selectedId);const book=DATA.books.find(b=>b.file===ex.source);$('notebook-button').hidden=mock||!ex.notebookCode;$('add-notebook-code').hidden=mock||!ex.notebookCode;$('notebook-examples').hidden=mock||!book?.examples.length;$('mock-control').hidden=!mock;}
 $('start-mock').addEventListener('click',()=>{mockDeadline=Date.now()+90*60000;try{sessionStorage.setItem('unahur_mock_deadline',String(mockDeadline));}catch{}openExercise(intervaloId);$('scope-filter').value='mock';renderList();updateHelpVisibility();toast('Simulacro iniciado: 90 minutos, pistas y soluciones ocultas.');});
 function finishMock(){mockDeadline=0;try{sessionStorage.removeItem('unahur_mock_deadline');}catch{}updateHelpVisibility();toast('Simulacro terminado. Registrá tus errores y planificá el siguiente intento.');}
 $('stop-mock').addEventListener('click',finishMock);
