@@ -1,10 +1,50 @@
 """Verifica integridad del material y los casos de entrenamiento (requiere NumPy)."""
 from pathlib import Path
+from html.parser import HTMLParser
 import ast
 import json
 import re
 
 ROOT = Path(__file__).resolve().parent.parent
+
+
+def check_markup(html, filename):
+    """Static structure/label checks; does not replace browser accessibility testing."""
+    class Markup(HTMLParser):
+        void = {'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link',
+                'meta', 'param', 'source', 'track', 'wbr'}
+
+        def __init__(self):
+            super().__init__()
+            self.stack, self.ids, self.labels, self.references, self.controls = [], set(), set(), [], []
+
+        def handle_starttag(self, tag, attributes):
+            attrs = dict(attributes)
+            if attrs.get('id'):
+                assert attrs['id'] not in self.ids, f'ID duplicado: {filename}: {attrs["id"]}'
+                self.ids.add(attrs['id'])
+            if tag == 'label' and attrs.get('for'):
+                self.labels.add(attrs['for'])
+                self.references.append(attrs['for'])
+            for name in ('aria-controls', 'aria-describedby', 'aria-labelledby'):
+                self.references.extend(attrs.get(name, '').split())
+            if tag in {'input', 'select', 'textarea'}:
+                self.controls.append((attrs, 'label' in self.stack))
+            assert int(attrs.get('tabindex', 0)) <= 0, f'Tabindex positivo: {filename}'
+            if tag not in self.void:
+                self.stack.append(tag)
+
+        def handle_endtag(self, tag):
+            assert self.stack and self.stack[-1] == tag, f'Cierre HTML incorrecto: {filename}: {tag}'
+            self.stack.pop()
+
+    parser = Markup()
+    parser.feed(html)
+    parser.close()
+    assert not parser.stack, f'Etiquetas sin cerrar: {filename}'
+    assert all(ref in parser.ids for ref in parser.references), f'Referencia de etiqueta/ARIA ausente: {filename}'
+    for attrs, implicit_label in parser.controls:
+        assert implicit_label or attrs.get('id') in parser.labels or attrs.get('aria-label') or attrs.get('aria-labelledby'), f'Control sin etiqueta: {filename}: {attrs.get("id")}'
 
 
 def main():
@@ -65,17 +105,28 @@ def main():
         exec(compile(exercise['tests'], 'casos_' + exercise['id'], 'exec'), namespace)
         tested += 1
         assertions += sum(isinstance(node, ast.Assert) for node in ast.walk(ast.parse(exercise['tests'])))
-    html = (ROOT / 'Guia primer parcial estructura de datos.html').read_text(encoding='utf-8')
-    html_ids = re.findall(r'id="([^"]+)"', html)
-    assert len(html_ids) == len(set(html_ids)), 'Identificadores HTML duplicados'
-    for asset in re.findall(r'(?:src|href)="(ruta-entrenamiento/[^"]+)"', html):
-        assert (ROOT / asset).is_file(), asset
     app = (ROOT / 'ruta-entrenamiento/app.js').read_text(encoding='utf-8')
-    for element_id in re.findall(r"\$\('([^']+)'\)", app):
-        assert element_id in html_ids, f'Elemento ausente: {element_id}'
+    learning_views = (ROOT / 'ruta-entrenamiento/aprendizaje-vistas.js').read_text(encoding='utf-8')
+    html_files = ['index.html', 'Guia primer parcial estructura de datos.html']
+    exam_views = (ROOT / 'ruta-entrenamiento/simulacros-vistas.js').read_text(encoding='utf-8')
+    lab_views = (ROOT / 'ruta-entrenamiento/laboratorio-vistas.js').read_text(encoding='utf-8')
+    expected_scripts = ['datos.js', 'aprendizaje.js', 'aprendizaje-vistas.js', 'simulacros.js', 'simulacros-vistas.js', 'taller.js', 'laboratorio.js', 'laboratorio-vistas.js', 'pedagogia.js', 'evaluador.js', 'runtime.js', 'app.js']
+    for filename in html_files:
+        html = (ROOT / filename).read_text(encoding='utf-8')
+        check_markup(html, filename)
+        html_ids = re.findall(r'id="([^"]+)"', html)
+        assert len(html_ids) == len(set(html_ids)), f'Identificadores HTML duplicados: {filename}'
+        for asset in re.findall(r'(?:src|href)="(ruta-entrenamiento/[^"]+)"', html):
+            assert (ROOT / asset).is_file(), asset
+        scripts = re.findall(r'<script defer src="ruta-entrenamiento/([^"]+)"', html)
+        assert scripts == expected_scripts, f'Orden de carga incorrecto: {filename}'
+        for element_id in re.findall(r"\$\('([^']+)'\)", app + learning_views + exam_views + lab_views):
+            assert element_id in html_ids, f'Elemento ausente: {element_id} en {filename}'
+    assert (ROOT / html_files[0]).read_bytes() == (ROOT / html_files[1]).read_bytes(), 'Los dos HTML difieren'
     print(f'OK: {len(exercises)} ejercicios; {numbered} consignas de notebooks; {len(material_files)} materiales.')
     print(f'OK: {sum(len(book["examples"]) for book in data["books"])} celdas de ejemplos idénticas a los notebooks originales.')
     print(f'OK: {tested} soluciones con pruebas; {assertions} aserciones; fuentes, plantillas y referencias HTML válidas.')
+    print('OK: ambos HTML tienen estructura completa, controles etiquetados y referencias ARIA válidas.')
     print('La ejecución del motor en el navegador requiere una comprobación independiente con internet.')
 
 
