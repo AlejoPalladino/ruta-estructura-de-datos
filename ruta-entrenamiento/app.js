@@ -226,7 +226,7 @@ function switchView(view, writeHash = true) {
  document.querySelectorAll('.view').forEach(v => v.hidden = v.id !== 'view-'+view);
  document.querySelectorAll('[data-view]').forEach(b => { b.classList.toggle('active',b.dataset.view === view); b.setAttribute('aria-current', b.dataset.view === view ? 'page' : 'false'); });
  if (writeHash) history.replaceState(null,'','#'+view);
- if(view==='ruta')renderLearning();
+ if(view==='ruta'){renderLearning();topicMap.render();}
  syncExamFocus();
  window.scrollTo({top:0,behavior:'instant'});
 }

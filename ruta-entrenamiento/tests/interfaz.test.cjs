@@ -469,16 +469,17 @@ test('mapa alterna vistas y densidades y conserva preferencias al recargar',asyn
  const app=boot(),e=app.elements;
  assert.equal(e['map-canvas'].dataset.view,'grafo');
  assert.equal(e['map-canvas'].dataset.density,'media');
- const mediumWidth=parseInt(e['map-canvas'].style.width);
+ const mediumLayout=e['map-lines'].innerHTML;
  await e['map-subte'].click();
  assert.equal(e['map-canvas'].dataset.view,'subte');
  assert.equal(e['map-subte'].getAttribute('aria-pressed'),'true');
  assert.equal(e['map-grafo'].getAttribute('aria-pressed'),'false');
- await e['map-compacta'].click();assert.ok(parseInt(e['map-canvas'].style.width)<mediumWidth);
- await e['map-aireada'].click();assert.ok(parseInt(e['map-canvas'].style.width)>mediumWidth);
+ await e['map-compacta'].click();const compactLayout=e['map-lines'].innerHTML;assert.notEqual(compactLayout,mediumLayout);
+ await e['map-aireada'].click();assert.notEqual(e['map-lines'].innerHTML,compactLayout);
  const reloaded=boot(app.storage.get(key));
  assert.equal(reloaded.elements['map-canvas'].dataset.view,'subte');
  assert.equal(reloaded.elements['map-canvas'].dataset.density,'aireada');
+ await e['map-topic-list'].emit('click',{target:{closest:selector=>selector==='[data-map-topic]'?{dataset:{mapTopic:'matriz'}}:null}});
  await e['map-practice'].click();assert.equal(app.run('DATA.exercises.find(ex=>ex.id===selectedId).topic'),'matriz');
 });
 
