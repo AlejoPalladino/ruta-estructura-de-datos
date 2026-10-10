@@ -5,7 +5,7 @@
 <meta name="color-scheme" content="dark"><title>Mi ruta de entrenamiento · Estructuras de datos</title>
 <link rel="icon" type="image/svg+xml" href="ruta-entrenamiento/logo.svg">
 <link rel="stylesheet" href="ruta-entrenamiento/estilos.css">
-<script defer src="ruta-entrenamiento/datos.js"></script><script defer src="ruta-entrenamiento/aprendizaje.js"></script><script defer src="ruta-entrenamiento/aprendizaje-vistas.js"></script><script defer src="ruta-entrenamiento/simulacros.js"></script><script defer src="ruta-entrenamiento/simulacros-vistas.js"></script><script defer src="ruta-entrenamiento/taller.js"></script><script defer src="ruta-entrenamiento/laboratorio.js"></script><script defer src="ruta-entrenamiento/laboratorio-vistas.js"></script><script defer src="ruta-entrenamiento/pedagogia.js"></script><script defer src="ruta-entrenamiento/evaluador.js"></script><script defer src="ruta-entrenamiento/runtime.js"></script><script defer src="ruta-entrenamiento/app.js"></script>
+<script defer src="ruta-entrenamiento/datos.js"></script><script defer src="ruta-entrenamiento/aprendizaje.js"></script><script defer src="ruta-entrenamiento/aprendizaje-vistas.js"></script><script defer src="ruta-entrenamiento/simulacros.js"></script><script defer src="ruta-entrenamiento/simulacros-vistas.js"></script><script defer src="ruta-entrenamiento/taller.js"></script><script defer src="ruta-entrenamiento/laboratorio.js"></script><script defer src="ruta-entrenamiento/laboratorio-vistas.js"></script><script defer src="ruta-entrenamiento/pedagogia.js"></script><script defer src="ruta-entrenamiento/evaluador.js"></script><script defer src="ruta-entrenamiento/runtime.js"></script><script defer src="ruta-entrenamiento/mapa.js"></script><script defer src="ruta-entrenamiento/app.js"></script>
 </head>
 <body>
 <a class="skip" href="#main">Ir al contenido</a>
@@ -28,6 +28,18 @@
   <section id="exam-banner" class="exam-banner" aria-label="Simulacro activo" hidden><div><span class="eyebrow">MODO EXAMEN</span><strong id="exam-live-label"></strong><p id="exam-live-status" role="status"></p></div><strong id="mock-time" aria-label="Tiempo restante" aria-live="off">90:00</strong><button id="resume-mock" class="secondary">Continuar simulacro</button><button id="stop-mock" class="danger">Entregar simulacro</button><div id="exam-active-items" class="exam-active-items"></div></section>
   <section id="view-ruta" class="view">
    <div class="hero"><div><span class="eyebrow accent">CONSTRUIR CONFIANZA, UN EJERCICIO A LA VEZ</span><h1>Tu ruta de<br><span>entrenamiento.</span></h1><p>Reforzá matrices y recursividad para el recuperatorio.<br>Seguí el ritmo de la materia con práctica que se acumula.</p><button id="continue-route" class="primary">Continuar donde quedé <span>→</span></button></div><div class="hero-note"><span class="eyebrow">LA META</span><p>Poder escribirlo.<br>Poder probarlo.<br><strong>Poder explicarlo.</strong></p><span class="muted">Resolver sin mirar y volver a hacerlo 48 h después.</span></div></div>
+   <section class="panel topic-map" aria-labelledby="map-heading">
+    <div class="section-heading"><div><span class="eyebrow accent">EL PANORAMA COMPLETO</span><h2 id="map-heading">Todos los temas, conectados.</h2></div><span class="chip">11 temas · 3 recorridos</span></div>
+    <p>Explorá cómo se relacionan los temas. Elegí uno para ver sus conexiones y empezar a practicar.</p>
+    <div class="map-toolbar">
+     <div class="map-control"><span id="map-view-label">Vista</span><div class="map-segment" role="group" aria-labelledby="map-view-label"><button id="map-grafo" aria-pressed="true" aria-controls="map-canvas">Grafo</button><button id="map-subte" aria-pressed="false" aria-controls="map-canvas">Subte</button></div></div>
+     <div class="map-control"><span id="map-density-label">Densidad</span><div class="map-segment" role="group" aria-labelledby="map-density-label"><button id="map-compacta" aria-pressed="false" aria-controls="map-canvas">Compacta</button><button id="map-media" aria-pressed="true" aria-controls="map-canvas">Media</button><button id="map-aireada" aria-pressed="false" aria-controls="map-canvas">Aireada</button></div></div>
+    </div>
+    <div class="map-legend"><span class="map-line-base">A · Datos y recorridos</span><span class="map-line-recursion">B · Recursividad</span><span class="map-line-structures">C · Abstracción</span></div>
+    <p id="map-help" class="muted">Conexiones de estudio sugeridas: leé de izquierda a derecha. Podés practicar en cualquier orden. Deslizá el mapa para recorrerlo; con teclado, usá Tab y Enter para elegir un tema.</p>
+    <div class="map-viewport" tabindex="0" role="region" aria-label="Mapa de temas" aria-describedby="map-help"><div id="map-canvas"><svg id="map-lines" aria-hidden="true" focusable="false"></svg><div id="map-nodes"></div></div></div>
+    <div id="map-detail" class="map-detail"><div aria-live="polite" aria-atomic="true"><span class="eyebrow">TEMA SELECCIONADO</span><h3 id="map-topic-title"></h3><p id="map-topic-description"></p><dl><dt>Se apoya en</dt><dd id="map-before"></dd><dt>Se conecta con</dt><dd id="map-after"></dd></dl></div><button id="map-practice" class="secondary">Practicar →</button></div>
+   </section>
    <div class="stats">
     <article><span>Ejercicios completados</span><strong id="completed-count">0</strong><p>Resolución aprobada o declaración de completado.</p></article>
     <article><span>Aprobados por pruebas</span><strong id="approved-count">0</strong><p id="approved-total">17 con pruebas</p></article>

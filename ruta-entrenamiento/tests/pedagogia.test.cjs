@@ -57,7 +57,7 @@ test('casos límite solo amplían ejercicios que ya tienen contrato automático'
 test('preferencias opcionales v5 sobreviven validación sin imponer cambios a respaldos anteriores',()=>{
  const source={version:5,exercises:{},preferences:{layout:'split',catalogCollapsed:true,desconocido:'ignorar'}};
  const validated=p.validateState(source,data.exercises);
- assert.deepEqual(validated.preferences,{layout:'split',catalogCollapsed:true});assert.deepEqual(p.validateState(validated,data.exercises),validated);
- assert.deepEqual(p.validateState({...source,preferences:{layout:'no existe',catalogCollapsed:'sí'}},data.exercises).preferences,{layout:'stacked',catalogCollapsed:false});
+ assert.deepEqual(validated.preferences,{layout:'split',catalogCollapsed:true,mapView:'grafo',mapDensity:'media'});assert.deepEqual(p.validateState(validated,data.exercises),validated);
+ assert.deepEqual(p.validateState({...source,preferences:{layout:'no existe',catalogCollapsed:'sí'}},data.exercises).preferences,{layout:'stacked',catalogCollapsed:false,mapView:'grafo',mapDensity:'media'});
  assert.equal(Object.hasOwn(p.validateState({version:2,exercises:{}},data.exercises),'preferences'),false);
 });

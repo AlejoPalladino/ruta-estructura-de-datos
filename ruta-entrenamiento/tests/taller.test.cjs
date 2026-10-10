@@ -26,7 +26,7 @@ test('vecinos respetan extremos y una consigna excluida no provoca saltos',()=>{
  assert.deepEqual(workshop.neighbors([],'a'),{index:-1,total:0,previous:null,next:null});
 });
 test('preferencias opcionales mantienen distribución anterior y validan solo valores permitidos',()=>{
- assert.deepEqual(workshop.cleanPreferences(),{layout:'stacked',catalogCollapsed:false});
- assert.deepEqual(workshop.cleanPreferences({layout:'split',catalogCollapsed:true}),{layout:'split',catalogCollapsed:true});
- assert.deepEqual(workshop.cleanPreferences({layout:'inventada',catalogCollapsed:'false'}),{layout:'stacked',catalogCollapsed:false});
+ assert.deepEqual(workshop.cleanPreferences(),{layout:'stacked',catalogCollapsed:false,mapView:'grafo',mapDensity:'media'});
+ assert.deepEqual(workshop.cleanPreferences({layout:'split',catalogCollapsed:true}),{layout:'split',catalogCollapsed:true,mapView:'grafo',mapDensity:'media'});
+ assert.deepEqual(workshop.cleanPreferences({layout:'inventada',catalogCollapsed:'false'}),{layout:'stacked',catalogCollapsed:false,mapView:'grafo',mapDensity:'media'});
 });

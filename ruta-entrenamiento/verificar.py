@@ -110,7 +110,7 @@ def main():
     html_files = ['index.html', 'Guia primer parcial estructura de datos.html']
     exam_views = (ROOT / 'ruta-entrenamiento/simulacros-vistas.js').read_text(encoding='utf-8')
     lab_views = (ROOT / 'ruta-entrenamiento/laboratorio-vistas.js').read_text(encoding='utf-8')
-    expected_scripts = ['datos.js', 'aprendizaje.js', 'aprendizaje-vistas.js', 'simulacros.js', 'simulacros-vistas.js', 'taller.js', 'laboratorio.js', 'laboratorio-vistas.js', 'pedagogia.js', 'evaluador.js', 'runtime.js', 'app.js']
+    expected_scripts = ['datos.js', 'aprendizaje.js', 'aprendizaje-vistas.js', 'simulacros.js', 'simulacros-vistas.js', 'taller.js', 'laboratorio.js', 'laboratorio-vistas.js', 'pedagogia.js', 'evaluador.js', 'runtime.js', 'mapa.js', 'app.js']
     for filename in html_files:
         html = (ROOT / filename).read_text(encoding='utf-8')
         check_markup(html, filename)

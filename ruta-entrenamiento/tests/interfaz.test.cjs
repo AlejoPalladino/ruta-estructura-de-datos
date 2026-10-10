@@ -39,7 +39,7 @@ function boot(initial,htmlName='index.html',failWrites=false,initialTime=Date.no
    querySelector:()=>nav,querySelectorAll:sel=>sel==='.view'?Object.values(elements).filter(e=>e.id.startsWith('view-')):navigation,addEventListener:(name,fn)=>{(documentEvents[name]||=[]).push(fn);}}
  });
  context.window=context;
- for(const name of ['datos.js','aprendizaje.js','aprendizaje-vistas.js','simulacros.js','simulacros-vistas.js','taller.js','laboratorio.js','laboratorio-vistas.js','pedagogia.js','evaluador.js','runtime.js','app.js'])vm.runInContext(fs.readFileSync(path.join(root,'ruta-entrenamiento',name),'utf8'),context,{filename:name});
+ for(const name of ['datos.js','aprendizaje.js','aprendizaje-vistas.js','simulacros.js','simulacros-vistas.js','taller.js','laboratorio.js','laboratorio-vistas.js','pedagogia.js','evaluador.js','runtime.js','mapa.js','app.js'])vm.runInContext(fs.readFileSync(path.join(root,'ruta-entrenamiento',name),'utf8'),context,{filename:name});
  return {elements,context,storage,session,timers,intervals,workers,advanceTo:value=>{clock=value;},run:script=>vm.runInContext(script,context),
   emitWindow:async(name,event={})=>{for(const fn of windowEvents[name]||[])await fn(event);},
   emitDocument:async(name,event={})=>{for(const fn of documentEvents[name]||[])await fn(event);}};
@@ -463,4 +463,29 @@ test('Etapa 4: ejemplos se cargan al consultar, registran ayuda y no se generan 
  const content=e['notebook-examples-content'].innerHTML;e['notebook-examples'].open=false;await e['notebook-examples'].emit('toggle');e['notebook-examples'].open=true;await e['notebook-examples'].emit('toggle');assert.equal(e['notebook-examples-content'].innerHTML,content);
  await e['start-mock'].click();assert.equal(e['notebook-examples-content'].innerHTML,'');assert.equal(e['import-backup'].disabled,true);
  e['notebook-examples'].open=true;await e['notebook-examples'].emit('toggle');assert.equal(e['notebook-examples-content'].innerHTML,'');assert.equal(app.run('entryFor(selectedId).help.solutionViewed'),false);
+});
+
+test('mapa alterna vistas y densidades y conserva preferencias al recargar',async()=>{
+ const app=boot(),e=app.elements;
+ assert.equal(e['map-canvas'].dataset.view,'grafo');
+ assert.equal(e['map-canvas'].dataset.density,'media');
+ const mediumWidth=parseInt(e['map-canvas'].style.width);
+ await e['map-subte'].click();
+ assert.equal(e['map-canvas'].dataset.view,'subte');
+ assert.equal(e['map-subte'].getAttribute('aria-pressed'),'true');
+ assert.equal(e['map-grafo'].getAttribute('aria-pressed'),'false');
+ await e['map-compacta'].click();assert.ok(parseInt(e['map-canvas'].style.width)<mediumWidth);
+ await e['map-aireada'].click();assert.ok(parseInt(e['map-canvas'].style.width)>mediumWidth);
+ const reloaded=boot(app.storage.get(key));
+ assert.equal(reloaded.elements['map-canvas'].dataset.view,'subte');
+ assert.equal(reloaded.elements['map-canvas'].dataset.density,'aireada');
+ await e['map-practice'].click();assert.equal(app.run('DATA.exercises.find(ex=>ex.id===selectedId).topic'),'matriz');
+});
+
+test('mapa cubre todos los temas y sus conexiones sin inventar ejercicios futuros',()=>{
+ const app=boot();
+ assert.equal(app.run('Object.keys(topics).every(id=>TrainingMap.nodes.some(node=>node.id===id))'),true);
+ assert.equal(app.run('TrainingMap.edges.every(([a,b])=>TrainingMap.nodes.some(n=>n.id===a)&&TrainingMap.nodes.some(n=>n.id===b))'),true);
+ assert.equal(app.run('TrainingMap.nodes.every(node=>node.future || TrainingMap.exercisesFor(node,DATA).length>0)'),true);
+ assert.equal(app.run('TrainingMap.nodes.filter(n=>n.future).every(node=>TrainingMap.exercisesFor(node,DATA).length===0)'),true);
 });

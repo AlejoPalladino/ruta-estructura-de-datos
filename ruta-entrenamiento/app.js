@@ -206,7 +206,9 @@ const route = [
  {title:'Integración para el recuperatorio',desc:'Intervalo creciente, suma recursiva de matrices y TDA Puerto: contratos, regiones y transferencia.',ids:['refuerzo-suma-matriz',intervaloId,puertoId,'legacy-1','legacy-8'],gate:'Resolver un modelo sin ayuda y probar bordes.',time:'4 sesiones + simulacros'},
  {title:'Seguir con la materia',desc:'Pilas LIFO, colas FIFO, TDA en dos niveles, diccionarios y conjuntos. Consultar las clases de listas y árboles.',ids:[findId('TP_5_Pila_Cola',1),findId('TP_5_Pila_Cola',11),findId('TP5bis',1),findId('TP_6_Diccionario',1),findId('TP_6_Diccionario',6)],gate:'Conservar el orden y respetar las interfaces.',time:'2 sesiones por semana'}
 ];
+const topicMap=window.TrainingMap.create({$,data:DATA,getState:()=>state,save:saveState,openExercise,openSchedule:()=>switchView('cronograma')});
 function renderRoute() {
+ topicMap.render();
  $('route-cards').innerHTML = route.map((r,i) => {
   const completed = r.ids.filter(id => LEARNING.isMastered(state.exercises[id])).length;
   return `<article class="route-card ${r.focus?'focus':''}"><span class="step">${String(i+1).padStart(2,'0')}</span><h3>${r.title}</h3><p>${r.desc}</p><p><strong>Para avanzar:</strong> ${r.gate}</p><div class="route-footer"><button class="secondary" data-route="${i}">${completed === r.ids.length?'Repetir':'Entrenar'} →</button><small>${completed}/${r.ids.length} consolidados · ${r.time}</small></div></article>`;

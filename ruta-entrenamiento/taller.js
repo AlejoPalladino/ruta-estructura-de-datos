@@ -15,7 +15,7 @@
   return {index,total:exercises.length,previous:index>0?exercises[index-1].id:null,
    next:index>=0&&index<exercises.length-1?exercises[index+1].id:null};
  }
- function cleanPreferences(value){return {layout:value?.layout==='split'?'split':'stacked',catalogCollapsed:value?.catalogCollapsed===true};}
+ function cleanPreferences(value){return {layout:value?.layout==='split'?'split':'stacked',catalogCollapsed:value?.catalogCollapsed===true,mapView:value?.mapView==='subte'?'subte':'grafo',mapDensity:['compacta','media','aireada'].includes(value?.mapDensity)?value.mapDensity:'media'};}
  const api={filter,neighbors,cleanPreferences};
  root.TrainingWorkshop=api;if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(globalThis);
